@@ -4,7 +4,12 @@
  */
 
 import { isEnglishLocale, t } from '../i18n/index.js';
-import { normalizeModelDisplayMode } from '../../shared/settings-normalization.mjs';
+import {
+  DEFAULT_DISPLAY_CURRENCY,
+  DISPLAY_CURRENCY_META,
+  normalizeDisplayCurrency,
+  normalizeModelDisplayMode,
+} from '../../shared/settings-normalization.mjs';
 import {
   classifyCacheTier,
   classifySpeedTier,
@@ -96,6 +101,63 @@ export function formatCnyApprox(usdAmount, rate = 7.2) {
   if (rmb <= 0) return '≈ ¥0';
   if (rmb >= 10) return `≈ ¥${Math.round(rmb)}`;
   return `≈ ¥${rmb.toFixed(1)}`;
+}
+
+export function resolveSecondaryCurrencyRate(currencyCode, fxRates = null) {
+  const code = normalizeDisplayCurrency(currencyCode);
+  const meta = DISPLAY_CURRENCY_META[code] || DISPLAY_CURRENCY_META[DEFAULT_DISPLAY_CURRENCY];
+  const liveRate = Number(fxRates?.rates?.[code]);
+  return {
+    code,
+    meta,
+    rate: Number.isFinite(liveRate) && liveRate > 0 ? liveRate : meta.fallbackRate,
+  };
+}
+
+export function formatSecondaryCurrency(
+  usdAmount,
+  currencyCode = DEFAULT_DISPLAY_CURRENCY,
+  fxRates = null
+) {
+  const code = normalizeDisplayCurrency(currencyCode);
+  if (code === 'USD') return '';
+  const { meta, rate } = resolveSecondaryCurrencyRate(code, fxRates);
+  const converted = Number(usdAmount || 0) * rate;
+  if (!Number.isFinite(converted) || converted <= 0) {
+    return `≈ ${meta.symbol}0`;
+  }
+  if (meta.decimals === 0 || converted >= 100) {
+    return `≈ ${meta.symbol}${Math.round(converted).toLocaleString('en-US')}`;
+  }
+  if (code === 'CNY' && converted >= 10) {
+    return `≈ ${meta.symbol}${Math.round(converted)}`;
+  }
+  if (converted >= 10) {
+    return `≈ ${meta.symbol}${converted.toFixed(1)}`;
+  }
+  return `≈ ${meta.symbol}${converted.toFixed(meta.decimals)}`;
+}
+
+export function formatSecondaryCurrencyTooltip(
+  currencyCode = DEFAULT_DISPLAY_CURRENCY,
+  fxRates = null
+) {
+  const code = normalizeDisplayCurrency(currencyCode);
+  if (code === 'USD') return '';
+  const { rate } = resolveSecondaryCurrencyRate(code, fxRates);
+  const rateText = rate >= 100 ? rate.toFixed(1) : rate.toFixed(rate >= 10 ? 2 : 3);
+  const prov =
+    !fxRates || fxRates.source === 'fallback'
+      ? 'Fallback'
+      : fxRates.provider === 'frankfurter'
+        ? 'Frankfurter'
+        : fxRates.provider === 'frankfurter+er-api'
+          ? 'Frankfurter / ER-API'
+          : fxRates.provider === 'er-api'
+            ? 'ExchangeRate-API'
+            : String(fxRates.provider || 'FX');
+  const dateSuffix = fxRates?.date ? `, ${fxRates.date}` : '';
+  return `1 USD = ${rateText} ${code} (${prov}${dateSuffix})`;
 }
 
 export function formatDateSpanBadge(startMs, endMs) {

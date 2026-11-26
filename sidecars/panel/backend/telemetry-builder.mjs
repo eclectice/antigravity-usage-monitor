@@ -33,6 +33,7 @@ import {
 import { getEndpointCacheStore } from './endpoint-registry.mjs';
 import { getContextWindowGroups, getContextWindowModels } from './context-windows.mjs';
 import { getCliStatusLineRuntimeStatus } from './cli-statusline-config.mjs';
+import { getFxRatesSnapshot } from './fx-rates.mjs';
 import { readLocalSummarySnapshot } from './cli-sqlite-reader.mjs';
 import {
   enumerateAndSyncConversations,
@@ -2443,6 +2444,7 @@ export async function buildTelemetryPayloadInternal(
       return { ...group, reportedLimitTokens: latest?.tokens ?? null };
     }),
     cloudStatus: getCloudStatus(),
+    fxRates: getFxRatesSnapshot(),
     account: {
       status: accountStatus,
       email: userStatus?.email || '',

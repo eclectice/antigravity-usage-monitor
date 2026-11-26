@@ -20,10 +20,11 @@ import {
 } from '../core/domPatch.js';
 import {
   buildDeterministicModelColorMap,
-  formatCnyApprox,
   formatDateSpanBadge,
   formatMetric,
   formatPctNumber,
+  formatSecondaryCurrency,
+  formatSecondaryCurrencyTooltip,
   formatSpeedMetric,
   formatTokensPrecise,
   formatUsd,
@@ -32,6 +33,7 @@ import {
   normalizeModelDisplayMode,
   resolveDeterministicModelColor,
 } from '../core/formatters.js';
+import { normalizeDisplayCurrency } from '../../shared/settings-normalization.mjs';
 import { scaleBucketsExact } from '../../shared/telemetry-display-rules.mjs';
 import {
   buildConsumptionExportBaseName,
@@ -1133,10 +1135,19 @@ export const ConsumptionView = defineComponent({
       const thinkingTokens = Number(acct.thinkingTokens || 0);
       const costUsd = Number(acct.costUsd || 0);
 
+      const displayCurrency = normalizeDisplayCurrency(slice.displayCurrency);
+      const fxRates = slice.fxRates || null;
+
       patchText(heroTotalTokens, formatTokensPrecise(totalTokens));
       patchText(heroTotalCalls, t('cons.callsCount', { calls: acct.calls || 0 }));
       patchText(heroCostUsd, formatUsd(costUsd));
-      patchText(heroCostCny, formatCnyApprox(costUsd));
+      patchText(heroCostCny, formatSecondaryCurrency(costUsd, displayCurrency, fxRates));
+      patchAttr(heroCostCny, 'hidden', displayCurrency === 'USD');
+      patchAttr(
+        heroCostCny,
+        'title',
+        formatSecondaryCurrencyTooltip(displayCurrency, fxRates) || null
+      );
 
       patchText(cacheHitPctEl, formatPctNumber(acct.cacheHitPct ?? 0, { withSymbol: true }));
       patchText(cacheTokensEl, t('cons.cacheHitTokens', { tokens: formatTokensPrecise(cacheTokens) }));
@@ -1219,6 +1230,8 @@ export const ConsumptionView = defineComponent({
         totalCost: modelsTotalCost,
         totalCalls: modelsTotalCalls,
         maxAvgTps: modelsMaxAvgTps,
+        displayCurrency,
+        fxRates,
       };
 
       const rawTopConvs = Array.isArray(cons.topConversations) ? cons.topConversations : [];
@@ -1628,6 +1641,8 @@ export const ConsumptionView = defineComponent({
           st.telemetry?.settings?.showUpstreamModel
         ),
         showUpstreamModel: Boolean(st.telemetry?.settings?.showUpstreamModel),
+        displayCurrency: normalizeDisplayCurrency(st.telemetry?.settings?.displayCurrency),
+        fxRates: st.telemetry?.fxRates,
       }),
       (slice) => {
         latestSlice = slice;

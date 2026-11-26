@@ -2,8 +2,53 @@
 'use strict';
 
 // --- shared/settings-normalization.mjs ---
-const { SUPPORTED_LANGUAGES, THEME_ACCENT_KEYS, FONT_SCALE_KEYS, TOPBAR_SLOT_KEYS, DEFAULT_TOPBAR_SLOTS, MIN_TOPBAR_SLOTS, MAX_TOPBAR_SLOTS, DEFAULT_CLI_STATUSLINE_SLOTS, MIN_CLI_STATUSLINE_SLOTS, MAX_CLI_STATUSLINE_SLOTS, CLI_STATUSLINE_PRESETS, OVERVIEW_MODULE_KEYS, DEFAULT_OVERVIEW_MODULES, DEFAULT_HOVER_MODULES, METRIC_CARD_STYLES, HOVER_METRIC_STYLES, DEFAULT_OVERVIEW_METRIC_STYLE, DEFAULT_HOVER_METRIC_STYLE, DEFAULT_HOVER_SYNC_OVERVIEW_METRICS, MAX_LARGE_METRIC_SLOTS, OVERVIEW_METRIC_KEYS, DEFAULT_OVERVIEW_METRICS, DEFAULT_HOVER_METRICS, STEP_TABLE_COLUMN_KEYS, DEFAULT_STEP_TABLE_COLUMNS, DEFAULT_STEP_TOKEN_COMBO_FORMAT, STEP_TOKEN_SEGMENT_ALIASES, POPOVER_WIDTH_MODES, MIN_POPOVER_WIDTH, MAX_POPOVER_WIDTH, DEFAULT_POPOVER_WIDTH, normalizeLanguageSetting, normalizeThemeAccent, normalizeFontScale, normalizeModelDisplayMode, normalizePopoverWidthMode, normalizePopoverWidth, parseStepTokenComboSegments, normalizeStepTokenComboFormat, normalizePluginUpdateMode, normalizeWindowMountMode, normalizeWeeklyLimitMode, normalizeTopbarCapsuleSlots, normalizeCliStatusLineSlots, resolveEffectiveCliStatusLineSlots, normalizeOverviewMetrics, normalizeOverviewModules, normalizeHoverModules, normalizeMetricCardStyle, normalizeOverviewMetricStyle, normalizeHoverMetricStyle, normalizeHoverSyncOverviewMetrics, normalizeHoverMetrics, resolveEffectiveMetricMatrixConfig, normalizeStepTableColumns, normalizeStandalonePort, normalizeModernUi, CONTEXT_AGENT_MODES, DEFAULT_CONTEXT_AGENT_MODE, ACCOUNT_QUOTA_REFRESH_MINUTES, DEFAULT_ACCOUNT_QUOTA_REFRESH_MINUTES, normalizeAccountQuotaRefreshMinutes, normalizeContextAgentMode, normalizeExperimentalQuotaReservation, normalizeExperimentalModernUi, normalizeAutoConfigureLaunch, normalizeEnableRemoteSshTelemetry } = (() => {
+const { SUPPORTED_LANGUAGES, SUPPORTED_DISPLAY_CURRENCIES, DEFAULT_DISPLAY_CURRENCY, DISPLAY_CURRENCY_META, normalizeDisplayCurrency, THEME_ACCENT_KEYS, FONT_SCALE_KEYS, TOPBAR_SLOT_KEYS, DEFAULT_TOPBAR_SLOTS, MIN_TOPBAR_SLOTS, MAX_TOPBAR_SLOTS, DEFAULT_CLI_STATUSLINE_SLOTS, MIN_CLI_STATUSLINE_SLOTS, MAX_CLI_STATUSLINE_SLOTS, CLI_STATUSLINE_PRESETS, OVERVIEW_MODULE_KEYS, DEFAULT_OVERVIEW_MODULES, DEFAULT_HOVER_MODULES, METRIC_CARD_STYLES, HOVER_METRIC_STYLES, DEFAULT_OVERVIEW_METRIC_STYLE, DEFAULT_HOVER_METRIC_STYLE, DEFAULT_HOVER_SYNC_OVERVIEW_METRICS, MAX_LARGE_METRIC_SLOTS, OVERVIEW_METRIC_KEYS, DEFAULT_OVERVIEW_METRICS, DEFAULT_HOVER_METRICS, STEP_TABLE_COLUMN_KEYS, DEFAULT_STEP_TABLE_COLUMNS, DEFAULT_STEP_TOKEN_COMBO_FORMAT, STEP_TOKEN_SEGMENT_ALIASES, POPOVER_WIDTH_MODES, MIN_POPOVER_WIDTH, MAX_POPOVER_WIDTH, DEFAULT_POPOVER_WIDTH, normalizeLanguageSetting, normalizeThemeAccent, normalizeFontScale, normalizeModelDisplayMode, normalizePopoverWidthMode, normalizePopoverWidth, parseStepTokenComboSegments, normalizeStepTokenComboFormat, normalizePluginUpdateMode, normalizeWindowMountMode, normalizeWeeklyLimitMode, normalizeTopbarCapsuleSlots, normalizeCliStatusLineSlots, resolveEffectiveCliStatusLineSlots, normalizeOverviewMetrics, normalizeOverviewModules, normalizeHoverModules, normalizeMetricCardStyle, normalizeOverviewMetricStyle, normalizeHoverMetricStyle, normalizeHoverSyncOverviewMetrics, normalizeHoverMetrics, resolveEffectiveMetricMatrixConfig, normalizeStepTableColumns, normalizeStandalonePort, normalizeModernUi, CONTEXT_AGENT_MODES, DEFAULT_CONTEXT_AGENT_MODE, ACCOUNT_QUOTA_REFRESH_MINUTES, DEFAULT_ACCOUNT_QUOTA_REFRESH_MINUTES, normalizeAccountQuotaRefreshMinutes, normalizeContextAgentMode, normalizeExperimentalQuotaReservation, normalizeExperimentalModernUi, normalizeAutoConfigureLaunch, normalizeEnableRemoteSshTelemetry } = (() => {
 const SUPPORTED_LANGUAGES = Object.freeze(['auto', 'zh-CN', 'en-US']);
+
+const SUPPORTED_DISPLAY_CURRENCIES = Object.freeze([
+  'CNY',
+  'USD',
+  'MYR',
+  'EUR',
+  'GBP',
+  'JPY',
+  'SGD',
+  'AUD',
+  'CAD',
+  'HKD',
+  'KRW',
+  'INR',
+  'TWD',
+  'THB',
+  'IDR',
+  'CHF',
+]);
+
+const DEFAULT_DISPLAY_CURRENCY = 'CNY';
+
+const DISPLAY_CURRENCY_META = Object.freeze({
+  CNY: Object.freeze({ code: 'CNY', symbol: '¥', fallbackRate: 7.2, decimals: 1 }),
+  USD: Object.freeze({ code: 'USD', symbol: '$', fallbackRate: 1, decimals: 2 }),
+  MYR: Object.freeze({ code: 'MYR', symbol: 'RM', fallbackRate: 4.4, decimals: 2 }),
+  EUR: Object.freeze({ code: 'EUR', symbol: '€', fallbackRate: 0.92, decimals: 2 }),
+  GBP: Object.freeze({ code: 'GBP', symbol: '£', fallbackRate: 0.79, decimals: 2 }),
+  JPY: Object.freeze({ code: 'JPY', symbol: '¥', fallbackRate: 152, decimals: 0 }),
+  SGD: Object.freeze({ code: 'SGD', symbol: 'S$', fallbackRate: 1.34, decimals: 2 }),
+  AUD: Object.freeze({ code: 'AUD', symbol: 'A$', fallbackRate: 1.54, decimals: 2 }),
+  CAD: Object.freeze({ code: 'CAD', symbol: 'C$', fallbackRate: 1.39, decimals: 2 }),
+  HKD: Object.freeze({ code: 'HKD', symbol: 'HK$', fallbackRate: 7.78, decimals: 1 }),
+  KRW: Object.freeze({ code: 'KRW', symbol: '₩', fallbackRate: 1380, decimals: 0 }),
+  INR: Object.freeze({ code: 'INR', symbol: '₹', fallbackRate: 84.5, decimals: 1 }),
+  TWD: Object.freeze({ code: 'TWD', symbol: 'NT$', fallbackRate: 32.5, decimals: 1 }),
+  THB: Object.freeze({ code: 'THB', symbol: '฿', fallbackRate: 34.5, decimals: 1 }),
+  IDR: Object.freeze({ code: 'IDR', symbol: 'Rp', fallbackRate: 15800, decimals: 0 }),
+  CHF: Object.freeze({ code: 'CHF', symbol: 'CHF ', fallbackRate: 0.88, decimals: 2 }),
+});
+
+function normalizeDisplayCurrency(currency) {
+  const clean = String(currency ?? '').trim().toUpperCase();
+  return SUPPORTED_DISPLAY_CURRENCIES.includes(clean) ? clean : DEFAULT_DISPLAY_CURRENCY;
+}
 
 const THEME_ACCENT_KEYS = Object.freeze([
   'host',
@@ -510,7 +555,7 @@ function normalizeEnableRemoteSshTelemetry(val) {
   }
   return Boolean(val);
 }
-return { SUPPORTED_LANGUAGES, THEME_ACCENT_KEYS, FONT_SCALE_KEYS, TOPBAR_SLOT_KEYS, DEFAULT_TOPBAR_SLOTS, MIN_TOPBAR_SLOTS, MAX_TOPBAR_SLOTS, DEFAULT_CLI_STATUSLINE_SLOTS, MIN_CLI_STATUSLINE_SLOTS, MAX_CLI_STATUSLINE_SLOTS, CLI_STATUSLINE_PRESETS, OVERVIEW_MODULE_KEYS, DEFAULT_OVERVIEW_MODULES, DEFAULT_HOVER_MODULES, METRIC_CARD_STYLES, HOVER_METRIC_STYLES, DEFAULT_OVERVIEW_METRIC_STYLE, DEFAULT_HOVER_METRIC_STYLE, DEFAULT_HOVER_SYNC_OVERVIEW_METRICS, MAX_LARGE_METRIC_SLOTS, OVERVIEW_METRIC_KEYS, DEFAULT_OVERVIEW_METRICS, DEFAULT_HOVER_METRICS, STEP_TABLE_COLUMN_KEYS, DEFAULT_STEP_TABLE_COLUMNS, DEFAULT_STEP_TOKEN_COMBO_FORMAT, STEP_TOKEN_SEGMENT_ALIASES, POPOVER_WIDTH_MODES, MIN_POPOVER_WIDTH, MAX_POPOVER_WIDTH, DEFAULT_POPOVER_WIDTH, normalizeLanguageSetting, normalizeThemeAccent, normalizeFontScale, normalizeModelDisplayMode, normalizePopoverWidthMode, normalizePopoverWidth, parseStepTokenComboSegments, normalizeStepTokenComboFormat, normalizePluginUpdateMode, normalizeWindowMountMode, normalizeWeeklyLimitMode, normalizeTopbarCapsuleSlots, normalizeCliStatusLineSlots, resolveEffectiveCliStatusLineSlots, normalizeOverviewMetrics, normalizeOverviewModules, normalizeHoverModules, normalizeMetricCardStyle, normalizeOverviewMetricStyle, normalizeHoverMetricStyle, normalizeHoverSyncOverviewMetrics, normalizeHoverMetrics, resolveEffectiveMetricMatrixConfig, normalizeStepTableColumns, normalizeStandalonePort, normalizeModernUi, CONTEXT_AGENT_MODES, DEFAULT_CONTEXT_AGENT_MODE, ACCOUNT_QUOTA_REFRESH_MINUTES, DEFAULT_ACCOUNT_QUOTA_REFRESH_MINUTES, normalizeAccountQuotaRefreshMinutes, normalizeContextAgentMode, normalizeExperimentalQuotaReservation, normalizeExperimentalModernUi, normalizeAutoConfigureLaunch, normalizeEnableRemoteSshTelemetry };
+return { SUPPORTED_LANGUAGES, SUPPORTED_DISPLAY_CURRENCIES, DEFAULT_DISPLAY_CURRENCY, DISPLAY_CURRENCY_META, normalizeDisplayCurrency, THEME_ACCENT_KEYS, FONT_SCALE_KEYS, TOPBAR_SLOT_KEYS, DEFAULT_TOPBAR_SLOTS, MIN_TOPBAR_SLOTS, MAX_TOPBAR_SLOTS, DEFAULT_CLI_STATUSLINE_SLOTS, MIN_CLI_STATUSLINE_SLOTS, MAX_CLI_STATUSLINE_SLOTS, CLI_STATUSLINE_PRESETS, OVERVIEW_MODULE_KEYS, DEFAULT_OVERVIEW_MODULES, DEFAULT_HOVER_MODULES, METRIC_CARD_STYLES, HOVER_METRIC_STYLES, DEFAULT_OVERVIEW_METRIC_STYLE, DEFAULT_HOVER_METRIC_STYLE, DEFAULT_HOVER_SYNC_OVERVIEW_METRICS, MAX_LARGE_METRIC_SLOTS, OVERVIEW_METRIC_KEYS, DEFAULT_OVERVIEW_METRICS, DEFAULT_HOVER_METRICS, STEP_TABLE_COLUMN_KEYS, DEFAULT_STEP_TABLE_COLUMNS, DEFAULT_STEP_TOKEN_COMBO_FORMAT, STEP_TOKEN_SEGMENT_ALIASES, POPOVER_WIDTH_MODES, MIN_POPOVER_WIDTH, MAX_POPOVER_WIDTH, DEFAULT_POPOVER_WIDTH, normalizeLanguageSetting, normalizeThemeAccent, normalizeFontScale, normalizeModelDisplayMode, normalizePopoverWidthMode, normalizePopoverWidth, parseStepTokenComboSegments, normalizeStepTokenComboFormat, normalizePluginUpdateMode, normalizeWindowMountMode, normalizeWeeklyLimitMode, normalizeTopbarCapsuleSlots, normalizeCliStatusLineSlots, resolveEffectiveCliStatusLineSlots, normalizeOverviewMetrics, normalizeOverviewModules, normalizeHoverModules, normalizeMetricCardStyle, normalizeOverviewMetricStyle, normalizeHoverMetricStyle, normalizeHoverSyncOverviewMetrics, normalizeHoverMetrics, resolveEffectiveMetricMatrixConfig, normalizeStepTableColumns, normalizeStandalonePort, normalizeModernUi, CONTEXT_AGENT_MODES, DEFAULT_CONTEXT_AGENT_MODE, ACCOUNT_QUOTA_REFRESH_MINUTES, DEFAULT_ACCOUNT_QUOTA_REFRESH_MINUTES, normalizeAccountQuotaRefreshMinutes, normalizeContextAgentMode, normalizeExperimentalQuotaReservation, normalizeExperimentalModernUi, normalizeAutoConfigureLaunch, normalizeEnableRemoteSshTelemetry };
 })();
 
 // --- shared/telemetry-display-rules.mjs ---
@@ -789,6 +834,7 @@ const BRIDGE_API_ROUTE_DEFS = Object.freeze([
   Object.freeze({ path: '/api/settings/reset', method: 'POST', action: 'settings_reset' }),
   Object.freeze({ path: '/api/cache/rebuild', method: 'POST', action: 'cache_rebuild' }),
   Object.freeze({ path: '/api/cloud-sync', method: 'POST', action: 'cloud_sync' }),
+  Object.freeze({ path: '/api/fx-sync', method: 'POST', action: 'fx_sync' }),
   Object.freeze({ path: '/api/plugin-update', method: 'POST', action: 'plugin_update' }),
   Object.freeze({ path: '/api/bridge/relaunch', method: 'POST', action: 'bridge_relaunch' }),
   Object.freeze({
@@ -2028,6 +2074,15 @@ const I18N_MESSAGES_ZH_CN = Object.freeze({
   'settings.gen.langZh': '简体中文',
   'settings.gen.langEn': 'English',
   'settings.gen.langAuto': '跟随系统',
+  'settings.gen.currency': '换算货币',
+  'settings.gen.currencyUsdOnly': 'USD（仅美元，隐藏换算）',
+  'settings.gen.currencyRateHint': '1 USD ≈ {rate} {code}（{source}）',
+  'settings.gen.currencyUsdHint': '仅显示美元估算费用，隐藏二级货币换算',
+  'settings.gen.currencySyncBtn': '刷新汇率',
+  'settings.gen.currencySyncing': '正在刷新汇率…',
+  'settings.gen.currencySynced': '汇率已更新（{source}）',
+  'settings.gen.currencySyncFailed': '汇率刷新失败，继续使用缓存/内置参考汇率',
+  'settings.gen.currencySrcFallback': '内置参考汇率',
   'settings.gen.themeAccent': '主题色',
   'settings.gen.accentHost': '跟随宿主',
   'settings.gen.accentBlue': '经典蓝',
@@ -3149,6 +3204,15 @@ const I18N_MESSAGES_EN_US = Object.freeze({
   'settings.gen.langZh': '简体中文',
   'settings.gen.langEn': 'English',
   'settings.gen.langAuto': 'Follow System',
+  'settings.gen.currency': 'Display Currency',
+  'settings.gen.currencyUsdOnly': 'USD ($ only — hide conversion)',
+  'settings.gen.currencyRateHint': '1 USD ≈ {rate} {code} ({source})',
+  'settings.gen.currencyUsdHint': 'Shows USD cost only without secondary currency conversion',
+  'settings.gen.currencySyncBtn': 'Refresh',
+  'settings.gen.currencySyncing': 'Refreshing FX rates…',
+  'settings.gen.currencySynced': 'FX rates updated ({source})',
+  'settings.gen.currencySyncFailed': 'FX refresh failed; using cached/fallback rate',
+  'settings.gen.currencySrcFallback': 'Built-in fallback',
   'settings.gen.themeAccent': 'Accent Color',
   'settings.gen.accentHost': 'Host',
   'settings.gen.accentBlue': 'Blue',
@@ -5499,7 +5563,7 @@ return { defineComponent };
 })();
 
 // --- src/core/formatters.js ---
-const { formatMetric, formatSpeedMetric, formatCachePct, formatPctNumber, getSpeedToneClass, getCacheToneClass, getStepCostToneClass, getTtftToneClass, formatTokens, formatTokensPrecise, formatCnyApprox, formatDateSpanBadge, formatTrendSlotFullLabel, formatUsd, speedReasonText, formatAnomalyKindLabel, formatAnomalyTagText, resolveModelAnomalySummary, formatStepAnomalyInlineSummary, buildStepAnomalyDiagnostic, buildStepCompactionDiagnostic, buildStepRevertedDiagnostic, formatTimingDetailSec, hasStepTimingData, buildStepTimingDiagnostic, buildModelAnomalyDiagnostic, sampleSummary, formatCountdown, formatCompactDateTime, formatElapsedSec, stripVendorModelPrefix, resolveModelDisplayInfo, mergeModelsByDisplayName, getAgentBadgeClass, formatAgentBadgeText, formatAgentLabel, formatConversationMeta, formatLiveActivityLabel, formatLiveActivityDetail, getCanonicalModelColorSeed, resolveDeterministicModelColor, buildDeterministicModelColorMap } = (() => {
+const { formatMetric, formatSpeedMetric, formatCachePct, formatPctNumber, getSpeedToneClass, getCacheToneClass, getStepCostToneClass, getTtftToneClass, formatTokens, formatTokensPrecise, formatCnyApprox, resolveSecondaryCurrencyRate, formatSecondaryCurrency, formatSecondaryCurrencyTooltip, formatDateSpanBadge, formatTrendSlotFullLabel, formatUsd, speedReasonText, formatAnomalyKindLabel, formatAnomalyTagText, resolveModelAnomalySummary, formatStepAnomalyInlineSummary, buildStepAnomalyDiagnostic, buildStepCompactionDiagnostic, buildStepRevertedDiagnostic, formatTimingDetailSec, hasStepTimingData, buildStepTimingDiagnostic, buildModelAnomalyDiagnostic, sampleSummary, formatCountdown, formatCompactDateTime, formatElapsedSec, stripVendorModelPrefix, resolveModelDisplayInfo, mergeModelsByDisplayName, getAgentBadgeClass, formatAgentBadgeText, formatAgentLabel, formatConversationMeta, formatLiveActivityLabel, formatLiveActivityDetail, getCanonicalModelColorSeed, resolveDeterministicModelColor, buildDeterministicModelColorMap } = (() => {
 const EN_MONTH_SHORT = Object.freeze([
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
@@ -5576,6 +5640,63 @@ function formatCnyApprox(usdAmount, rate = 7.2) {
   if (rmb <= 0) return '≈ ¥0';
   if (rmb >= 10) return `≈ ¥${Math.round(rmb)}`;
   return `≈ ¥${rmb.toFixed(1)}`;
+}
+
+function resolveSecondaryCurrencyRate(currencyCode, fxRates = null) {
+  const code = normalizeDisplayCurrency(currencyCode);
+  const meta = DISPLAY_CURRENCY_META[code] || DISPLAY_CURRENCY_META[DEFAULT_DISPLAY_CURRENCY];
+  const liveRate = Number(fxRates?.rates?.[code]);
+  return {
+    code,
+    meta,
+    rate: Number.isFinite(liveRate) && liveRate > 0 ? liveRate : meta.fallbackRate,
+  };
+}
+
+function formatSecondaryCurrency(
+  usdAmount,
+  currencyCode = DEFAULT_DISPLAY_CURRENCY,
+  fxRates = null
+) {
+  const code = normalizeDisplayCurrency(currencyCode);
+  if (code === 'USD') return '';
+  const { meta, rate } = resolveSecondaryCurrencyRate(code, fxRates);
+  const converted = Number(usdAmount || 0) * rate;
+  if (!Number.isFinite(converted) || converted <= 0) {
+    return `≈ ${meta.symbol}0`;
+  }
+  if (meta.decimals === 0 || converted >= 100) {
+    return `≈ ${meta.symbol}${Math.round(converted).toLocaleString('en-US')}`;
+  }
+  if (code === 'CNY' && converted >= 10) {
+    return `≈ ${meta.symbol}${Math.round(converted)}`;
+  }
+  if (converted >= 10) {
+    return `≈ ${meta.symbol}${converted.toFixed(1)}`;
+  }
+  return `≈ ${meta.symbol}${converted.toFixed(meta.decimals)}`;
+}
+
+function formatSecondaryCurrencyTooltip(
+  currencyCode = DEFAULT_DISPLAY_CURRENCY,
+  fxRates = null
+) {
+  const code = normalizeDisplayCurrency(currencyCode);
+  if (code === 'USD') return '';
+  const { rate } = resolveSecondaryCurrencyRate(code, fxRates);
+  const rateText = rate >= 100 ? rate.toFixed(1) : rate.toFixed(rate >= 10 ? 2 : 3);
+  const prov =
+    !fxRates || fxRates.source === 'fallback'
+      ? 'Fallback'
+      : fxRates.provider === 'frankfurter'
+        ? 'Frankfurter'
+        : fxRates.provider === 'frankfurter+er-api'
+          ? 'Frankfurter / ER-API'
+          : fxRates.provider === 'er-api'
+            ? 'ExchangeRate-API'
+            : String(fxRates.provider || 'FX');
+  const dateSuffix = fxRates?.date ? `, ${fxRates.date}` : '';
+  return `1 USD = ${rateText} ${code} (${prov}${dateSuffix})`;
 }
 
 function formatDateSpanBadge(startMs, endMs) {
@@ -6847,7 +6968,7 @@ function buildDeterministicModelColorMap(models = []) {
 
   return colorMap;
 }
-return { formatMetric, formatSpeedMetric, formatCachePct, formatPctNumber, getSpeedToneClass, getCacheToneClass, getStepCostToneClass, getTtftToneClass, formatTokens, formatTokensPrecise, formatCnyApprox, formatDateSpanBadge, formatTrendSlotFullLabel, formatUsd, speedReasonText, formatAnomalyKindLabel, formatAnomalyTagText, resolveModelAnomalySummary, formatStepAnomalyInlineSummary, buildStepAnomalyDiagnostic, buildStepCompactionDiagnostic, buildStepRevertedDiagnostic, formatTimingDetailSec, hasStepTimingData, buildStepTimingDiagnostic, buildModelAnomalyDiagnostic, sampleSummary, formatCountdown, formatCompactDateTime, formatElapsedSec, stripVendorModelPrefix, resolveModelDisplayInfo, mergeModelsByDisplayName, getAgentBadgeClass, formatAgentBadgeText, formatAgentLabel, formatConversationMeta, formatLiveActivityLabel, formatLiveActivityDetail, getCanonicalModelColorSeed, resolveDeterministicModelColor, buildDeterministicModelColorMap };
+return { formatMetric, formatSpeedMetric, formatCachePct, formatPctNumber, getSpeedToneClass, getCacheToneClass, getStepCostToneClass, getTtftToneClass, formatTokens, formatTokensPrecise, formatCnyApprox, resolveSecondaryCurrencyRate, formatSecondaryCurrency, formatSecondaryCurrencyTooltip, formatDateSpanBadge, formatTrendSlotFullLabel, formatUsd, speedReasonText, formatAnomalyKindLabel, formatAnomalyTagText, resolveModelAnomalySummary, formatStepAnomalyInlineSummary, buildStepAnomalyDiagnostic, buildStepCompactionDiagnostic, buildStepRevertedDiagnostic, formatTimingDetailSec, hasStepTimingData, buildStepTimingDiagnostic, buildModelAnomalyDiagnostic, sampleSummary, formatCountdown, formatCompactDateTime, formatElapsedSec, stripVendorModelPrefix, resolveModelDisplayInfo, mergeModelsByDisplayName, getAgentBadgeClass, formatAgentBadgeText, formatAgentLabel, formatConversationMeta, formatLiveActivityLabel, formatLiveActivityDetail, getCanonicalModelColorSeed, resolveDeterministicModelColor, buildDeterministicModelColorMap };
 })();
 
 // --- src/core/stepInspector.js ---
@@ -10139,7 +10260,7 @@ return { fetchHostI18nStatus, refreshHostI18nManifest, selectHostI18nLanguage, u
 })();
 
 // --- src/store/telemetryStore.js ---
-const { extractHostRouteCascadeId, telemetryStore, clearConsumptionRangeCache, clearConversationViewCache, CLIENT_TOPBAR_SLOT_KEYS, DEFAULT_CLIENT_TOPBAR_SLOTS, DEFAULT_CLIENT_CONTEXT_AGENT_MODE, CLIENT_CLI_STATUSLINE_PRESETS, DEFAULT_CLIENT_CLI_STATUSLINE_SLOTS, CLIENT_OVERVIEW_MODULE_KEYS, DEFAULT_CLIENT_OVERVIEW_MODULES, DEFAULT_CLIENT_HOVER_MODULES, DEFAULT_CLIENT_HOVER_SYNC_OVERVIEW_METRICS, DEFAULT_CLIENT_HOVER_METRIC_STYLE, DEFAULT_CLIENT_HOVER_METRICS, DEFAULT_CLIENT_OVERVIEW_METRIC_STYLE, MAX_CLIENT_LARGE_METRIC_SLOTS, CLIENT_OVERVIEW_METRIC_KEYS, DEFAULT_CLIENT_OVERVIEW_METRICS, CLIENT_STEP_COLUMN_KEYS, DEFAULT_CLIENT_STEP_COLUMNS, DEFAULT_CLIENT_STEP_TOKEN_COMBO_FORMAT, MIN_CLIENT_POPOVER_WIDTH, MAX_CLIENT_POPOVER_WIDTH, DEFAULT_CLIENT_POPOVER_WIDTH, parseClientStepTokenComboSegments, normalizeClientStepTokenComboFormat, normalizeClientPopoverWidthMode, normalizeClientPopoverWidth, normalizeClientModelDisplayMode, normalizeClientTopbarSlots, normalizeClientContextAgentMode, normalizeClientExperimentalQuotaReservation, normalizeClientAccountQuotaRefreshMinutes, normalizeClientCliStatusLineSlots, getDefaultCtxInspectorAgentId, resolveOverlayCtxInspectorAgentId, resolveEffectiveClientCliStatusLineSlots, normalizeClientHoverModules, normalizeClientHoverSyncOverviewMetrics, normalizeClientHoverMetricStyle, normalizeClientHoverMetrics, normalizeClientOverviewModules, normalizeClientOverviewMetricStyle, normalizeClientOverviewMetrics, resolveEffectiveClientMetricMatrixConfig, normalizeClientStepColumns, normalizeClientUpdateMode, normalizeClientWindowMountMode, isEquivalentTelemetry, resetTelemetryForEndpointSwitch, fetchTelemetry, selectConversation, selectConsumptionTimeRange, selectConsumptionCyclePool, prefetchConsumptionPresets, saveSettingsPatch, saveModelContextWindow, resetAllSettings, rebuildTrajectoryCache, triggerCloudSync, normalizeClientAutoConfigureLaunch, normalizeClientEnableRemoteSshTelemetry, triggerBridgeHostRelaunch, triggerCliStatusLineAction, fetchSessionMigrationCatalog, fetchQuotaReservationLog, executeSessionMigration, fetchLocalSessionsList, fetchSessionCleanupPreview, deleteLocalSessionsAction, redactLocalLedgerPrivacy, revealLocalSessionPathAction, triggerPluginUpdate, startAsyncTelemetryLoop, stopAsyncTelemetryLoop, resolveHostRouteMatch, resolveScopedConversation, isMacHostPlatform } = (() => {
+const { extractHostRouteCascadeId, telemetryStore, clearConsumptionRangeCache, clearConversationViewCache, CLIENT_TOPBAR_SLOT_KEYS, DEFAULT_CLIENT_TOPBAR_SLOTS, DEFAULT_CLIENT_CONTEXT_AGENT_MODE, CLIENT_CLI_STATUSLINE_PRESETS, DEFAULT_CLIENT_CLI_STATUSLINE_SLOTS, CLIENT_OVERVIEW_MODULE_KEYS, DEFAULT_CLIENT_OVERVIEW_MODULES, DEFAULT_CLIENT_HOVER_MODULES, DEFAULT_CLIENT_HOVER_SYNC_OVERVIEW_METRICS, DEFAULT_CLIENT_HOVER_METRIC_STYLE, DEFAULT_CLIENT_HOVER_METRICS, DEFAULT_CLIENT_OVERVIEW_METRIC_STYLE, MAX_CLIENT_LARGE_METRIC_SLOTS, CLIENT_OVERVIEW_METRIC_KEYS, DEFAULT_CLIENT_OVERVIEW_METRICS, CLIENT_STEP_COLUMN_KEYS, DEFAULT_CLIENT_STEP_COLUMNS, DEFAULT_CLIENT_STEP_TOKEN_COMBO_FORMAT, MIN_CLIENT_POPOVER_WIDTH, MAX_CLIENT_POPOVER_WIDTH, DEFAULT_CLIENT_POPOVER_WIDTH, parseClientStepTokenComboSegments, normalizeClientStepTokenComboFormat, normalizeClientPopoverWidthMode, normalizeClientPopoverWidth, normalizeClientModelDisplayMode, normalizeClientTopbarSlots, normalizeClientContextAgentMode, normalizeClientExperimentalQuotaReservation, normalizeClientAccountQuotaRefreshMinutes, normalizeClientCliStatusLineSlots, getDefaultCtxInspectorAgentId, resolveOverlayCtxInspectorAgentId, resolveEffectiveClientCliStatusLineSlots, normalizeClientHoverModules, normalizeClientHoverSyncOverviewMetrics, normalizeClientHoverMetricStyle, normalizeClientHoverMetrics, normalizeClientOverviewModules, normalizeClientOverviewMetricStyle, normalizeClientOverviewMetrics, resolveEffectiveClientMetricMatrixConfig, normalizeClientStepColumns, normalizeClientUpdateMode, normalizeClientWindowMountMode, isEquivalentTelemetry, resetTelemetryForEndpointSwitch, fetchTelemetry, selectConversation, selectConsumptionTimeRange, selectConsumptionCyclePool, prefetchConsumptionPresets, saveSettingsPatch, saveModelContextWindow, resetAllSettings, rebuildTrajectoryCache, triggerCloudSync, normalizeClientAutoConfigureLaunch, normalizeClientEnableRemoteSshTelemetry, triggerFxSync, triggerBridgeHostRelaunch, triggerCliStatusLineAction, fetchSessionMigrationCatalog, fetchQuotaReservationLog, executeSessionMigration, fetchLocalSessionsList, fetchSessionCleanupPreview, deleteLocalSessionsAction, redactLocalLedgerPrivacy, revealLocalSessionPathAction, triggerPluginUpdate, startAsyncTelemetryLoop, stopAsyncTelemetryLoop, resolveHostRouteMatch, resolveScopedConversation, isMacHostPlatform } = (() => {
 const CASCADE_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function extractHostRouteCascadeId() {
@@ -10668,6 +10789,12 @@ function isEquivalentTelemetry(prev, next) {
     return false;
   }
   if (pSet?.weeklyLimitMode !== nSet?.weeklyLimitMode) return false;
+  if (
+    normalizeDisplayCurrency(pSet?.displayCurrency) !==
+    normalizeDisplayCurrency(nSet?.displayCurrency)
+  ) {
+    return false;
+  }
   if (pSet?.weeklyTokenBudget !== nSet?.weeklyTokenBudget) return false;
   if (pSet?.weeklyCostBudget !== nSet?.weeklyCostBudget) return false;
   if ((pSet?.pluginUpdateMode ?? '') !== (nSet?.pluginUpdateMode ?? '')) return false;
@@ -10803,6 +10930,17 @@ function isEquivalentTelemetry(prev, next) {
     pCloud?.lastSyncError !== nCloud?.lastSyncError ||
     pCloud?.lastUpdateError !== nCloud?.lastUpdateError ||
     pCloud?.lastUpdateResult?.updatedAtMs !== nCloud?.lastUpdateResult?.updatedAtMs
+  ) {
+    return false;
+  }
+  const pFx = prev.fxRates;
+  const nFx = next.fxRates;
+  if (
+    pFx?.fetchedAtMs !== nFx?.fetchedAtMs ||
+    pFx?.provider !== nFx?.provider ||
+    pFx?.source !== nFx?.source ||
+    pFx?.date !== nFx?.date ||
+    pFx?.lastError !== nFx?.lastError
   ) {
     return false;
   }
@@ -11977,6 +12115,9 @@ async function saveSettingsPatch(patch) {
   if (Object.prototype.hasOwnProperty.call(safePatch, 'language')) {
     safePatch.language = normalizeI18nLanguage(safePatch.language);
   }
+  if (Object.prototype.hasOwnProperty.call(safePatch, 'displayCurrency')) {
+    safePatch.displayCurrency = normalizeDisplayCurrency(safePatch.displayCurrency);
+  }
   if (Object.prototype.hasOwnProperty.call(safePatch, 'themeAccent')) {
     safePatch.themeAccent = normalizeClientThemeAccent(safePatch.themeAccent);
   }
@@ -12298,6 +12439,17 @@ async function triggerCloudSync() {
 
 const normalizeClientAutoConfigureLaunch = normalizeAutoConfigureLaunch;
 const normalizeClientEnableRemoteSshTelemetry = normalizeEnableRemoteSshTelemetry;
+
+async function triggerFxSync() {
+  const res = await callSidecarApi('/api/fx-sync', { method: 'POST', body: {} });
+  const cur = telemetryStore.getState().telemetry;
+  if (cur && res?.fxRates) {
+    telemetryStore.setState({
+      telemetry: { ...cur, fxRates: res.fxRates },
+    });
+  }
+  return res;
+}
 
 async function triggerBridgeHostRelaunch(options = {}) {
   const payload =
@@ -12724,7 +12876,7 @@ function isMacHostPlatform(telemetry) {
   }
   return false;
 }
-return { extractHostRouteCascadeId, telemetryStore, clearConsumptionRangeCache, clearConversationViewCache, CLIENT_TOPBAR_SLOT_KEYS, DEFAULT_CLIENT_TOPBAR_SLOTS, DEFAULT_CLIENT_CONTEXT_AGENT_MODE, CLIENT_CLI_STATUSLINE_PRESETS, DEFAULT_CLIENT_CLI_STATUSLINE_SLOTS, CLIENT_OVERVIEW_MODULE_KEYS, DEFAULT_CLIENT_OVERVIEW_MODULES, DEFAULT_CLIENT_HOVER_MODULES, DEFAULT_CLIENT_HOVER_SYNC_OVERVIEW_METRICS, DEFAULT_CLIENT_HOVER_METRIC_STYLE, DEFAULT_CLIENT_HOVER_METRICS, DEFAULT_CLIENT_OVERVIEW_METRIC_STYLE, MAX_CLIENT_LARGE_METRIC_SLOTS, CLIENT_OVERVIEW_METRIC_KEYS, DEFAULT_CLIENT_OVERVIEW_METRICS, CLIENT_STEP_COLUMN_KEYS, DEFAULT_CLIENT_STEP_COLUMNS, DEFAULT_CLIENT_STEP_TOKEN_COMBO_FORMAT, MIN_CLIENT_POPOVER_WIDTH, MAX_CLIENT_POPOVER_WIDTH, DEFAULT_CLIENT_POPOVER_WIDTH, parseClientStepTokenComboSegments, normalizeClientStepTokenComboFormat, normalizeClientPopoverWidthMode, normalizeClientPopoverWidth, normalizeClientModelDisplayMode, normalizeClientTopbarSlots, normalizeClientContextAgentMode, normalizeClientExperimentalQuotaReservation, normalizeClientAccountQuotaRefreshMinutes, normalizeClientCliStatusLineSlots, getDefaultCtxInspectorAgentId, resolveOverlayCtxInspectorAgentId, resolveEffectiveClientCliStatusLineSlots, normalizeClientHoverModules, normalizeClientHoverSyncOverviewMetrics, normalizeClientHoverMetricStyle, normalizeClientHoverMetrics, normalizeClientOverviewModules, normalizeClientOverviewMetricStyle, normalizeClientOverviewMetrics, resolveEffectiveClientMetricMatrixConfig, normalizeClientStepColumns, normalizeClientUpdateMode, normalizeClientWindowMountMode, isEquivalentTelemetry, resetTelemetryForEndpointSwitch, fetchTelemetry, selectConversation, selectConsumptionTimeRange, selectConsumptionCyclePool, prefetchConsumptionPresets, saveSettingsPatch, saveModelContextWindow, resetAllSettings, rebuildTrajectoryCache, triggerCloudSync, normalizeClientAutoConfigureLaunch, normalizeClientEnableRemoteSshTelemetry, triggerBridgeHostRelaunch, triggerCliStatusLineAction, fetchSessionMigrationCatalog, fetchQuotaReservationLog, executeSessionMigration, fetchLocalSessionsList, fetchSessionCleanupPreview, deleteLocalSessionsAction, redactLocalLedgerPrivacy, revealLocalSessionPathAction, triggerPluginUpdate, startAsyncTelemetryLoop, stopAsyncTelemetryLoop, resolveHostRouteMatch, resolveScopedConversation, isMacHostPlatform };
+return { extractHostRouteCascadeId, telemetryStore, clearConsumptionRangeCache, clearConversationViewCache, CLIENT_TOPBAR_SLOT_KEYS, DEFAULT_CLIENT_TOPBAR_SLOTS, DEFAULT_CLIENT_CONTEXT_AGENT_MODE, CLIENT_CLI_STATUSLINE_PRESETS, DEFAULT_CLIENT_CLI_STATUSLINE_SLOTS, CLIENT_OVERVIEW_MODULE_KEYS, DEFAULT_CLIENT_OVERVIEW_MODULES, DEFAULT_CLIENT_HOVER_MODULES, DEFAULT_CLIENT_HOVER_SYNC_OVERVIEW_METRICS, DEFAULT_CLIENT_HOVER_METRIC_STYLE, DEFAULT_CLIENT_HOVER_METRICS, DEFAULT_CLIENT_OVERVIEW_METRIC_STYLE, MAX_CLIENT_LARGE_METRIC_SLOTS, CLIENT_OVERVIEW_METRIC_KEYS, DEFAULT_CLIENT_OVERVIEW_METRICS, CLIENT_STEP_COLUMN_KEYS, DEFAULT_CLIENT_STEP_COLUMNS, DEFAULT_CLIENT_STEP_TOKEN_COMBO_FORMAT, MIN_CLIENT_POPOVER_WIDTH, MAX_CLIENT_POPOVER_WIDTH, DEFAULT_CLIENT_POPOVER_WIDTH, parseClientStepTokenComboSegments, normalizeClientStepTokenComboFormat, normalizeClientPopoverWidthMode, normalizeClientPopoverWidth, normalizeClientModelDisplayMode, normalizeClientTopbarSlots, normalizeClientContextAgentMode, normalizeClientExperimentalQuotaReservation, normalizeClientAccountQuotaRefreshMinutes, normalizeClientCliStatusLineSlots, getDefaultCtxInspectorAgentId, resolveOverlayCtxInspectorAgentId, resolveEffectiveClientCliStatusLineSlots, normalizeClientHoverModules, normalizeClientHoverSyncOverviewMetrics, normalizeClientHoverMetricStyle, normalizeClientHoverMetrics, normalizeClientOverviewModules, normalizeClientOverviewMetricStyle, normalizeClientOverviewMetrics, resolveEffectiveClientMetricMatrixConfig, normalizeClientStepColumns, normalizeClientUpdateMode, normalizeClientWindowMountMode, isEquivalentTelemetry, resetTelemetryForEndpointSwitch, fetchTelemetry, selectConversation, selectConsumptionTimeRange, selectConsumptionCyclePool, prefetchConsumptionPresets, saveSettingsPatch, saveModelContextWindow, resetAllSettings, rebuildTrajectoryCache, triggerCloudSync, normalizeClientAutoConfigureLaunch, normalizeClientEnableRemoteSshTelemetry, triggerFxSync, triggerBridgeHostRelaunch, triggerCliStatusLineAction, fetchSessionMigrationCatalog, fetchQuotaReservationLog, executeSessionMigration, fetchLocalSessionsList, fetchSessionCleanupPreview, deleteLocalSessionsAction, redactLocalLedgerPrivacy, revealLocalSessionPathAction, triggerPluginUpdate, startAsyncTelemetryLoop, stopAsyncTelemetryLoop, resolveHostRouteMatch, resolveScopedConversation, isMacHostPlatform };
 })();
 
 // --- src/components/ui/TopLongPillNav.js ---
@@ -29833,7 +29985,12 @@ function updateBreakdownItemRow(refs, item, totalsCtx, sortMode = 'tokens') {
     patchAttr(refs.pctBadge, 'hidden', false);
     patchAttr(refs.pctBadge, 'title', null);
     patchText(refs.pctBadge, formatPctNumber(costShare, { withSymbol: true }));
-    patchText(refs.totalTokEl, isAllUnpriced ? '' : formatCnyApprox(costVal));
+    patchText(
+      refs.totalTokEl,
+      isAllUnpriced
+        ? ''
+        : formatSecondaryCurrency(costVal, totalsCtx?.displayCurrency, totalsCtx?.fxRates)
+    );
     patchText(refs.costEl, costText);
 
     patchAttr(refs.segBar.el, 'hidden', true);
@@ -34629,6 +34786,62 @@ function getLanguageOptions() {
   ];
 }
 
+const CURRENCY_LABELS = Object.freeze({
+  CNY: 'CNY (¥) — Chinese Yuan',
+  MYR: 'MYR (RM) — Malaysian Ringgit',
+  EUR: 'EUR (€) — Euro',
+  GBP: 'GBP (£) — British Pound',
+  JPY: 'JPY (¥) — Japanese Yen',
+  SGD: 'SGD (S$) — Singapore Dollar',
+  AUD: 'AUD (A$) — Australian Dollar',
+  CAD: 'CAD (C$) — Canadian Dollar',
+  HKD: 'HKD (HK$) — Hong Kong Dollar',
+  KRW: 'KRW (₩) — South Korean Won',
+  INR: 'INR (₹) — Indian Rupee',
+  TWD: 'TWD (NT$) — New Taiwan Dollar',
+  THB: 'THB (฿) — Thai Baht',
+  IDR: 'IDR (Rp) — Indonesian Rupiah',
+  CHF: 'CHF — Swiss Franc',
+});
+
+function getCurrencyOptions() {
+  return SUPPORTED_DISPLAY_CURRENCIES.map((code) => ({
+    value: code,
+    label: code === 'USD' ? t('settings.gen.currencyUsdOnly') : CURRENCY_LABELS[code] || code,
+  }));
+}
+
+function formatFxProviderLabel(fxRates) {
+  if (!fxRates || fxRates.source === 'fallback') {
+    return t('settings.gen.currencySrcFallback');
+  }
+  const prov =
+    fxRates.provider === 'frankfurter'
+      ? 'Frankfurter'
+      : fxRates.provider === 'frankfurter+er-api'
+        ? 'Frankfurter / ER-API'
+        : fxRates.provider === 'er-api'
+          ? 'ExchangeRate-API'
+          : String(fxRates.provider || 'FX');
+  return fxRates.date ? `${prov} · ${fxRates.date}` : prov;
+}
+
+function formatFxRateHint(currencyCode, fxRates) {
+  const code = normalizeDisplayCurrency(currencyCode);
+  if (code === 'USD') {
+    return t('settings.gen.currencyUsdHint');
+  }
+  const meta = DISPLAY_CURRENCY_META[code] || DISPLAY_CURRENCY_META[DEFAULT_DISPLAY_CURRENCY];
+  const rawRate = Number(fxRates?.rates?.[code]);
+  const rate = Number.isFinite(rawRate) && rawRate > 0 ? rawRate : meta.fallbackRate;
+  const rateText = rate >= 100 ? rate.toFixed(1) : rate.toFixed(rate >= 10 ? 2 : 3);
+  return t('settings.gen.currencyRateHint', {
+    rate: rateText,
+    code,
+    source: formatFxProviderLabel(fxRates),
+  });
+}
+
 function getFontScaleOptions() {
   return [
     { value: 'sm', label: t('settings.gen.fontSm') },
@@ -34663,12 +34876,14 @@ const SettingsGeneralTab = defineComponent({
   name: 'SettingsGeneralTab',
   setup({ props, onCleanup }) {
     let draftLanguage = 'auto';
+    let draftCurrency = DEFAULT_DISPLAY_CURRENCY;
     let draftThemeAccent = 'host';
     let draftFontScale = 'md';
     let draftModernUi = true;
     let draftPluginUpdateMode = 'manual';
     let latestSettings = null;
     let latestCloudStatus = null;
+    let latestFxRates = null;
     let appearanceTimer = null;
     let appearanceSaveSeq = 0;
     let cloudTimer = null;
@@ -34714,6 +34929,14 @@ const SettingsGeneralTab = defineComponent({
 
     const appearanceTitleEl = h('span', { text: t('settings.gen.appearanceTitle') });
     const langLabelEl = h('span', { className: 'form-label', text: t('settings.gen.language') });
+    const currencyLabelEl = h('span', {
+      className: 'form-label',
+      text: t('settings.gen.currency'),
+    });
+    const currencyHintEl = h('span', {
+      className: 'settings-hint-text',
+      text: formatFxRateHint(draftCurrency, latestFxRates),
+    });
     const accentLabelEl = h('span', {
       className: 'form-label',
       text: t('settings.gen.themeAccent'),
@@ -34842,6 +35065,67 @@ const SettingsGeneralTab = defineComponent({
       },
     });
 
+    const currencySelect = CustomSelect({
+      modelValue: draftCurrency,
+      options: getCurrencyOptions(),
+      onUpdateModelValue: async (val) => {
+        const nextCurrency = normalizeDisplayCurrency(val);
+        draftCurrency = nextCurrency;
+        currencySelect.setValue(nextCurrency);
+        patchText(currencyHintEl, formatFxRateHint(draftCurrency, latestFxRates));
+        patchAttr(currencySyncBtn, 'hidden', nextCurrency === 'USD');
+        const saveToken = ++appearanceSaveSeq;
+        showAppearanceFeedback(t('settings.saving'), 0);
+        try {
+          await saveSettingsPatch({ displayCurrency: nextCurrency });
+          if (saveToken === appearanceSaveSeq) {
+            showAppearanceFeedback(t('settings.saved'), 1500);
+          }
+        } catch {
+          if (latestSettings) renderSettings(latestSettings);
+          if (saveToken === appearanceSaveSeq) {
+            showAppearanceFeedback(t('settings.saveFailed'), 2500);
+          }
+        }
+      },
+    });
+
+    const currencySyncBtnText = h('span', { text: t('settings.gen.currencySyncBtn') });
+    const currencySyncBtn = h(
+      'button',
+      {
+        type: 'button',
+        className: 'btn-secondary',
+        style: 'padding: 3px 8px; font-size: var(--fs-sm);',
+        onClick: async () => {
+          patchAttr(currencySyncBtn, 'disabled', true);
+          showAppearanceFeedback(t('settings.gen.currencySyncing'), 0);
+          try {
+            const res = await triggerFxSync();
+            if (res?.fxRates) {
+              latestFxRates = res.fxRates;
+              patchText(currencyHintEl, formatFxRateHint(draftCurrency, latestFxRates));
+            }
+            if (res?.ok && res?.fxRates) {
+              showAppearanceFeedback(
+                t('settings.gen.currencySynced', {
+                  source: formatFxProviderLabel(res.fxRates),
+                }),
+                2800
+              );
+            } else {
+              showAppearanceFeedback(t('settings.gen.currencySyncFailed'), 3500);
+            }
+          } catch {
+            showAppearanceFeedback(t('settings.gen.currencySyncFailed'), 3500);
+          } finally {
+            patchAttr(currencySyncBtn, 'disabled', false);
+          }
+        },
+      },
+      [createSvgIcon('refresh', { size: 11 }), currencySyncBtnText]
+    );
+
     const appearancePanel = h('section', { className: 'panel' }, [
       h('div', { className: 'panel-header' }, [
         h('span', { className: 'panel-title' }, [
@@ -34851,6 +35135,15 @@ const SettingsGeneralTab = defineComponent({
         appearanceStatusText,
       ]),
       h('div', { className: 'form-row' }, [langLabelEl, languageSwitch.el]),
+      h('div', { className: 'form-row' }, [
+        currencyLabelEl,
+        h(
+          'div',
+          { style: 'display: flex; align-items: center; gap: 6px; flex-wrap: wrap;' },
+          [currencySelect.el, currencySyncBtn]
+        ),
+        currencyHintEl,
+      ]),
       h('div', { className: 'form-row' }, [accentLabelEl, themeColorPicker.el]),
       h('div', { className: 'form-row' }, [fontLabelEl, fontScaleSwitch.el, fontHintEl]),
       h('div', { className: 'form-row' }, [modernUiLabelEl, modernUiSwitch.el, modernUiHintEl]),
@@ -35020,6 +35313,7 @@ const SettingsGeneralTab = defineComponent({
       if (!settings) return;
       latestSettings = settings;
       draftLanguage = normalizeI18nLanguage(settings.language);
+      draftCurrency = normalizeDisplayCurrency(settings.displayCurrency);
       draftThemeAccent = normalizeClientThemeAccent(settings.themeAccent);
       draftFontScale = normalizeClientFontScale(settings.fontScale);
       draftModernUi = resolveSettingsModernUi(settings);
@@ -35032,6 +35326,12 @@ const SettingsGeneralTab = defineComponent({
         modelValue: draftLanguage,
         options: getLanguageOptions(),
       });
+      currencySelect.setProps({
+        modelValue: draftCurrency,
+        options: getCurrencyOptions(),
+      });
+      patchText(currencyHintEl, formatFxRateHint(draftCurrency, latestFxRates));
+      patchAttr(currencySyncBtn, 'hidden', draftCurrency === 'USD');
       themeColorPicker.refs.setValue(draftThemeAccent);
       fontScaleSwitch.setProps({
         modelValue: draftFontScale,
@@ -35095,9 +35395,22 @@ const SettingsGeneralTab = defineComponent({
       }
     }
 
+    function renderFxRates(fxRates) {
+      if (!fxRates) return;
+      latestFxRates = fxRates;
+      patchText(currencyHintEl, formatFxRateHint(draftCurrency, latestFxRates));
+    }
+
     function refreshLabels() {
       patchText(appearanceTitleEl, t('settings.gen.appearanceTitle'));
       patchText(langLabelEl, t('settings.gen.language'));
+      patchText(currencyLabelEl, t('settings.gen.currency'));
+      patchText(currencySyncBtnText, t('settings.gen.currencySyncBtn'));
+      patchText(currencyHintEl, formatFxRateHint(draftCurrency, latestFxRates));
+      currencySelect.setProps({
+        modelValue: draftCurrency,
+        options: getCurrencyOptions(),
+      });
       patchText(accentLabelEl, t('settings.gen.themeAccent'));
       patchText(fontLabelEl, t('settings.gen.fontScale'));
       patchText(fontHintEl, t('settings.gen.fontHint'));
@@ -35138,6 +35451,7 @@ const SettingsGeneralTab = defineComponent({
       if (appearanceTimer) clearTimeout(appearanceTimer);
       if (cloudTimer) clearTimeout(cloudTimer);
       languageSwitch.destroy();
+      currencySelect.destroy();
       themeColorPicker.destroy();
       fontScaleSwitch.destroy();
       modernUiSwitch.destroy();
@@ -35149,6 +35463,7 @@ const SettingsGeneralTab = defineComponent({
       el: rootEl,
       refs: {
         languageSwitch,
+        currencySelect,
         themeColorPicker,
         fontScaleSwitch,
         modernUiSwitch,
@@ -35159,6 +35474,7 @@ const SettingsGeneralTab = defineComponent({
         loadHostI18n: (force = false) => hostI18nCard.refs.load(force),
         renderSettings,
         renderCloudStatus,
+        renderFxRates,
         refreshLabels,
       },
     };
@@ -41705,10 +42021,19 @@ const ConsumptionView = defineComponent({
       const thinkingTokens = Number(acct.thinkingTokens || 0);
       const costUsd = Number(acct.costUsd || 0);
 
+      const displayCurrency = normalizeDisplayCurrency(slice.displayCurrency);
+      const fxRates = slice.fxRates || null;
+
       patchText(heroTotalTokens, formatTokensPrecise(totalTokens));
       patchText(heroTotalCalls, t('cons.callsCount', { calls: acct.calls || 0 }));
       patchText(heroCostUsd, formatUsd(costUsd));
-      patchText(heroCostCny, formatCnyApprox(costUsd));
+      patchText(heroCostCny, formatSecondaryCurrency(costUsd, displayCurrency, fxRates));
+      patchAttr(heroCostCny, 'hidden', displayCurrency === 'USD');
+      patchAttr(
+        heroCostCny,
+        'title',
+        formatSecondaryCurrencyTooltip(displayCurrency, fxRates) || null
+      );
 
       patchText(cacheHitPctEl, formatPctNumber(acct.cacheHitPct ?? 0, { withSymbol: true }));
       patchText(cacheTokensEl, t('cons.cacheHitTokens', { tokens: formatTokensPrecise(cacheTokens) }));
@@ -41790,6 +42115,8 @@ const ConsumptionView = defineComponent({
         totalCost: modelsTotalCost,
         totalCalls: modelsTotalCalls,
         maxAvgTps: modelsMaxAvgTps,
+        displayCurrency,
+        fxRates,
       };
 
       const rawTopConvs = Array.isArray(cons.topConversations) ? cons.topConversations : [];
@@ -42195,6 +42522,8 @@ const ConsumptionView = defineComponent({
           st.telemetry?.settings?.showUpstreamModel
         ),
         showUpstreamModel: Boolean(st.telemetry?.settings?.showUpstreamModel),
+        displayCurrency: normalizeDisplayCurrency(st.telemetry?.settings?.displayCurrency),
+        fxRates: st.telemetry?.fxRates,
       }),
       (slice) => {
         latestSlice = slice;
@@ -44287,6 +44616,7 @@ const SettingsView = defineComponent({
         }
         void generalTab.refs.loadHostI18n?.(false);
         if (telemetry?.cloudStatus) generalTab.refs.renderCloudStatus(telemetry.cloudStatus);
+        if (telemetry?.fxRates) generalTab.refs.renderFxRates?.(telemetry.fxRates);
       }
       refreshScroll();
     }
@@ -44300,6 +44630,7 @@ const SettingsView = defineComponent({
         cliStatusLine: st.telemetry?.cliStatusLine,
         hostPlatform: st.telemetry?.hostPlatform,
         cloudStatus: st.telemetry?.cloudStatus,
+        fxRates: st.telemetry?.fxRates,
         contextWindowModels: st.telemetry?.contextWindowModels,
         account: st.telemetry?.account,
         quotas: st.telemetry?.quotas,

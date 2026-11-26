@@ -16,9 +16,16 @@ import { isWindowOverlayMode } from '../../core/httpClient.js';
 import { createSvgIcon } from '../../icons/SvgIcon.js';
 import { normalizeI18nLanguage, setI18nLanguage, t } from '../../i18n/index.js';
 import {
+  DEFAULT_DISPLAY_CURRENCY,
+  DISPLAY_CURRENCY_META,
+  SUPPORTED_DISPLAY_CURRENCIES,
+  normalizeDisplayCurrency,
+} from '../../../shared/settings-normalization.mjs';
+import {
   normalizeClientUpdateMode,
   saveSettingsPatch,
   triggerCloudSync,
+  triggerFxSync,
   triggerPluginUpdate,
 } from '../../store/telemetryStore.js';
 import { ThemeColorPicker } from '../../components/settings/ThemeColorPicker.js';
@@ -33,6 +40,62 @@ function getLanguageOptions() {
     { value: 'zh-CN', label: t('settings.gen.langZh') },
     { value: 'en-US', label: t('settings.gen.langEn') },
   ];
+}
+
+const CURRENCY_LABELS = Object.freeze({
+  CNY: 'CNY (¥) — Chinese Yuan',
+  MYR: 'MYR (RM) — Malaysian Ringgit',
+  EUR: 'EUR (€) — Euro',
+  GBP: 'GBP (£) — British Pound',
+  JPY: 'JPY (¥) — Japanese Yen',
+  SGD: 'SGD (S$) — Singapore Dollar',
+  AUD: 'AUD (A$) — Australian Dollar',
+  CAD: 'CAD (C$) — Canadian Dollar',
+  HKD: 'HKD (HK$) — Hong Kong Dollar',
+  KRW: 'KRW (₩) — South Korean Won',
+  INR: 'INR (₹) — Indian Rupee',
+  TWD: 'TWD (NT$) — New Taiwan Dollar',
+  THB: 'THB (฿) — Thai Baht',
+  IDR: 'IDR (Rp) — Indonesian Rupiah',
+  CHF: 'CHF — Swiss Franc',
+});
+
+function getCurrencyOptions() {
+  return SUPPORTED_DISPLAY_CURRENCIES.map((code) => ({
+    value: code,
+    label: code === 'USD' ? t('settings.gen.currencyUsdOnly') : CURRENCY_LABELS[code] || code,
+  }));
+}
+
+function formatFxProviderLabel(fxRates) {
+  if (!fxRates || fxRates.source === 'fallback') {
+    return t('settings.gen.currencySrcFallback');
+  }
+  const prov =
+    fxRates.provider === 'frankfurter'
+      ? 'Frankfurter'
+      : fxRates.provider === 'frankfurter+er-api'
+        ? 'Frankfurter / ER-API'
+        : fxRates.provider === 'er-api'
+          ? 'ExchangeRate-API'
+          : String(fxRates.provider || 'FX');
+  return fxRates.date ? `${prov} · ${fxRates.date}` : prov;
+}
+
+function formatFxRateHint(currencyCode, fxRates) {
+  const code = normalizeDisplayCurrency(currencyCode);
+  if (code === 'USD') {
+    return t('settings.gen.currencyUsdHint');
+  }
+  const meta = DISPLAY_CURRENCY_META[code] || DISPLAY_CURRENCY_META[DEFAULT_DISPLAY_CURRENCY];
+  const rawRate = Number(fxRates?.rates?.[code]);
+  const rate = Number.isFinite(rawRate) && rawRate > 0 ? rawRate : meta.fallbackRate;
+  const rateText = rate >= 100 ? rate.toFixed(1) : rate.toFixed(rate >= 10 ? 2 : 3);
+  return t('settings.gen.currencyRateHint', {
+    rate: rateText,
+    code,
+    source: formatFxProviderLabel(fxRates),
+  });
 }
 
 function getFontScaleOptions() {
@@ -69,12 +132,14 @@ export const SettingsGeneralTab = defineComponent({
   name: 'SettingsGeneralTab',
   setup({ props, onCleanup }) {
     let draftLanguage = 'auto';
+    let draftCurrency = DEFAULT_DISPLAY_CURRENCY;
     let draftThemeAccent = 'host';
     let draftFontScale = 'md';
     let draftModernUi = true;
     let draftPluginUpdateMode = 'manual';
     let latestSettings = null;
     let latestCloudStatus = null;
+    let latestFxRates = null;
     let appearanceTimer = null;
     let appearanceSaveSeq = 0;
     let cloudTimer = null;
@@ -121,6 +186,14 @@ export const SettingsGeneralTab = defineComponent({
     // --- Card 1: 界面与外观 ---
     const appearanceTitleEl = h('span', { text: t('settings.gen.appearanceTitle') });
     const langLabelEl = h('span', { className: 'form-label', text: t('settings.gen.language') });
+    const currencyLabelEl = h('span', {
+      className: 'form-label',
+      text: t('settings.gen.currency'),
+    });
+    const currencyHintEl = h('span', {
+      className: 'settings-hint-text',
+      text: formatFxRateHint(draftCurrency, latestFxRates),
+    });
     const accentLabelEl = h('span', {
       className: 'form-label',
       text: t('settings.gen.themeAccent'),
@@ -249,6 +322,67 @@ export const SettingsGeneralTab = defineComponent({
       },
     });
 
+    const currencySelect = CustomSelect({
+      modelValue: draftCurrency,
+      options: getCurrencyOptions(),
+      onUpdateModelValue: async (val) => {
+        const nextCurrency = normalizeDisplayCurrency(val);
+        draftCurrency = nextCurrency;
+        currencySelect.setValue(nextCurrency);
+        patchText(currencyHintEl, formatFxRateHint(draftCurrency, latestFxRates));
+        patchAttr(currencySyncBtn, 'hidden', nextCurrency === 'USD');
+        const saveToken = ++appearanceSaveSeq;
+        showAppearanceFeedback(t('settings.saving'), 0);
+        try {
+          await saveSettingsPatch({ displayCurrency: nextCurrency });
+          if (saveToken === appearanceSaveSeq) {
+            showAppearanceFeedback(t('settings.saved'), 1500);
+          }
+        } catch {
+          if (latestSettings) renderSettings(latestSettings);
+          if (saveToken === appearanceSaveSeq) {
+            showAppearanceFeedback(t('settings.saveFailed'), 2500);
+          }
+        }
+      },
+    });
+
+    const currencySyncBtnText = h('span', { text: t('settings.gen.currencySyncBtn') });
+    const currencySyncBtn = h(
+      'button',
+      {
+        type: 'button',
+        className: 'btn-secondary',
+        style: 'padding: 3px 8px; font-size: var(--fs-sm);',
+        onClick: async () => {
+          patchAttr(currencySyncBtn, 'disabled', true);
+          showAppearanceFeedback(t('settings.gen.currencySyncing'), 0);
+          try {
+            const res = await triggerFxSync();
+            if (res?.fxRates) {
+              latestFxRates = res.fxRates;
+              patchText(currencyHintEl, formatFxRateHint(draftCurrency, latestFxRates));
+            }
+            if (res?.ok && res?.fxRates) {
+              showAppearanceFeedback(
+                t('settings.gen.currencySynced', {
+                  source: formatFxProviderLabel(res.fxRates),
+                }),
+                2800
+              );
+            } else {
+              showAppearanceFeedback(t('settings.gen.currencySyncFailed'), 3500);
+            }
+          } catch {
+            showAppearanceFeedback(t('settings.gen.currencySyncFailed'), 3500);
+          } finally {
+            patchAttr(currencySyncBtn, 'disabled', false);
+          }
+        },
+      },
+      [createSvgIcon('refresh', { size: 11 }), currencySyncBtnText]
+    );
+
     const appearancePanel = h('section', { className: 'panel' }, [
       h('div', { className: 'panel-header' }, [
         h('span', { className: 'panel-title' }, [
@@ -258,6 +392,15 @@ export const SettingsGeneralTab = defineComponent({
         appearanceStatusText,
       ]),
       h('div', { className: 'form-row' }, [langLabelEl, languageSwitch.el]),
+      h('div', { className: 'form-row' }, [
+        currencyLabelEl,
+        h(
+          'div',
+          { style: 'display: flex; align-items: center; gap: 6px; flex-wrap: wrap;' },
+          [currencySelect.el, currencySyncBtn]
+        ),
+        currencyHintEl,
+      ]),
       h('div', { className: 'form-row' }, [accentLabelEl, themeColorPicker.el]),
       h('div', { className: 'form-row' }, [fontLabelEl, fontScaleSwitch.el, fontHintEl]),
       h('div', { className: 'form-row' }, [modernUiLabelEl, modernUiSwitch.el, modernUiHintEl]),
@@ -428,6 +571,7 @@ export const SettingsGeneralTab = defineComponent({
       if (!settings) return;
       latestSettings = settings;
       draftLanguage = normalizeI18nLanguage(settings.language);
+      draftCurrency = normalizeDisplayCurrency(settings.displayCurrency);
       draftThemeAccent = normalizeClientThemeAccent(settings.themeAccent);
       draftFontScale = normalizeClientFontScale(settings.fontScale);
       draftModernUi = resolveSettingsModernUi(settings);
@@ -440,6 +584,12 @@ export const SettingsGeneralTab = defineComponent({
         modelValue: draftLanguage,
         options: getLanguageOptions(),
       });
+      currencySelect.setProps({
+        modelValue: draftCurrency,
+        options: getCurrencyOptions(),
+      });
+      patchText(currencyHintEl, formatFxRateHint(draftCurrency, latestFxRates));
+      patchAttr(currencySyncBtn, 'hidden', draftCurrency === 'USD');
       themeColorPicker.refs.setValue(draftThemeAccent);
       fontScaleSwitch.setProps({
         modelValue: draftFontScale,
@@ -503,9 +653,22 @@ export const SettingsGeneralTab = defineComponent({
       }
     }
 
+    function renderFxRates(fxRates) {
+      if (!fxRates) return;
+      latestFxRates = fxRates;
+      patchText(currencyHintEl, formatFxRateHint(draftCurrency, latestFxRates));
+    }
+
     function refreshLabels() {
       patchText(appearanceTitleEl, t('settings.gen.appearanceTitle'));
       patchText(langLabelEl, t('settings.gen.language'));
+      patchText(currencyLabelEl, t('settings.gen.currency'));
+      patchText(currencySyncBtnText, t('settings.gen.currencySyncBtn'));
+      patchText(currencyHintEl, formatFxRateHint(draftCurrency, latestFxRates));
+      currencySelect.setProps({
+        modelValue: draftCurrency,
+        options: getCurrencyOptions(),
+      });
       patchText(accentLabelEl, t('settings.gen.themeAccent'));
       patchText(fontLabelEl, t('settings.gen.fontScale'));
       patchText(fontHintEl, t('settings.gen.fontHint'));
@@ -546,6 +709,7 @@ export const SettingsGeneralTab = defineComponent({
       if (appearanceTimer) clearTimeout(appearanceTimer);
       if (cloudTimer) clearTimeout(cloudTimer);
       languageSwitch.destroy();
+      currencySelect.destroy();
       themeColorPicker.destroy();
       fontScaleSwitch.destroy();
       modernUiSwitch.destroy();
@@ -557,6 +721,7 @@ export const SettingsGeneralTab = defineComponent({
       el: rootEl,
       refs: {
         languageSwitch,
+        currencySelect,
         themeColorPicker,
         fontScaleSwitch,
         modernUiSwitch,
@@ -567,6 +732,7 @@ export const SettingsGeneralTab = defineComponent({
         loadHostI18n: (force = false) => hostI18nCard.refs.load(force),
         renderSettings,
         renderCloudStatus,
+        renderFxRates,
         refreshLabels,
       },
     };

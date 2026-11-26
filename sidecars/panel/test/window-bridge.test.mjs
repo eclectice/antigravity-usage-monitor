@@ -1521,8 +1521,8 @@ test('Compiled app.js mounts dual Shadow DOM hosts, tracks /c/<uuid> routes, pro
     assert.equal(langBtns[2].textContent, 'English');
     assert.equal(langBtns[1].classList.contains('is-active'), true, 'mockSettings language zh-CN selects index 1');
     const generalSelects = generalPane.querySelectorAll('.custom-select');
-    assert.equal(generalSelects.length, 2, 'General tab has Host I18n Language and Update Mode selects');
-    const updateModeSelectEl = generalSelects[1];
+    assert.equal(generalSelects.length, 3, 'General tab has Display Currency, Host I18n Language, and Update Mode selects');
+    const updateModeSelectEl = generalSelects[2];
 
     // Theme accent picker: switch to emerald, verify CSS vars injected on both hosts, then restore host
     const swatchBtns = generalPane.querySelectorAll('.theme-swatch-btn');

@@ -66,6 +66,7 @@ import {
   syncCloudCatalog,
 } from './plugin-updater.mjs';
 import { getCloudStatus } from './pricing-catalog.mjs';
+import { syncFxRates } from './fx-rates.mjs';
 import { buildTelemetryPayload, clearTelemetryBuilderMemo } from './telemetry-builder.mjs';
 import {
   createMacOsLaunchWrapper,
@@ -655,13 +656,27 @@ export function executeRebuildCacheAction(data = undefined, opts = {}) {
 }
 
 export async function executeCloudSyncAction() {
-  const cloudStatus = await syncCloudCatalog({ force: true });
+  const [cloudStatus] = await Promise.all([
+    syncCloudCatalog({ force: true }),
+    syncFxRates({ force: true }).catch(() => null),
+  ]);
   clearTelemetryBuilderMemo();
   return {
     status: 200,
     contentType: 'application/json',
     headers: { 'Cache-Control': 'no-store' },
     body: JSON.stringify({ ok: !cloudStatus.lastSyncError, cloudStatus }),
+  };
+}
+
+export async function executeFxSyncAction() {
+  const fxRates = await syncFxRates({ force: true });
+  clearTelemetryBuilderMemo();
+  return {
+    status: 200,
+    contentType: 'application/json',
+    headers: { 'Cache-Control': 'no-store' },
+    body: JSON.stringify({ ok: !fxRates.lastError, fxRates }),
   };
 }
 
@@ -1285,6 +1300,8 @@ export async function dispatchBridgeApiRequest(pathname, method, data, opts = un
       return executeRebuildCacheAction(data, opts);
     case 'cloud_sync':
       return executeCloudSyncAction();
+    case 'fx_sync':
+      return executeFxSyncAction();
     case 'plugin_update':
       return executePluginUpdateAction();
     case 'bridge_relaunch':
@@ -1344,6 +1361,8 @@ export function bootWindowBridgeRuntime({ allowDynamicLs = false, onRestart = nu
   if (typeof onRestart === 'function') {
     setSidecarRestartHandler(onRestart);
   }
+
+  syncFxRates({ force: false }).catch(() => {});
 
   if (lsRuntimeEndpoint.baseUrl) {
     syncCloudCatalog({ force: false }).catch(() => {});

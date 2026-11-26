@@ -57,6 +57,7 @@ const BACKEND_MODULE_FILES = [
   '../backend/ls-discovery.mjs',
   '../backend/ide-remote-ssh.mjs',
   '../backend/pricing-catalog.mjs',
+  '../backend/fx-rates.mjs',
   '../backend/plugin-updater.mjs',
   '../backend/ls-rpc.mjs',
   '../backend/cloudcode-proxy.mjs',

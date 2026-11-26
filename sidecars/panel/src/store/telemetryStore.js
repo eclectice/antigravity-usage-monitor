@@ -51,6 +51,7 @@ import {
   normalizeAutoConfigureLaunch,
   normalizeCliStatusLineSlots,
   normalizeContextAgentMode,
+  normalizeDisplayCurrency,
   normalizeEnableRemoteSshTelemetry,
   normalizeExperimentalQuotaReservation,
   normalizeHoverMetricStyle,
@@ -632,6 +633,12 @@ export function isEquivalentTelemetry(prev, next) {
     return false;
   }
   if (pSet?.weeklyLimitMode !== nSet?.weeklyLimitMode) return false;
+  if (
+    normalizeDisplayCurrency(pSet?.displayCurrency) !==
+    normalizeDisplayCurrency(nSet?.displayCurrency)
+  ) {
+    return false;
+  }
   if (pSet?.weeklyTokenBudget !== nSet?.weeklyTokenBudget) return false;
   if (pSet?.weeklyCostBudget !== nSet?.weeklyCostBudget) return false;
   if ((pSet?.pluginUpdateMode ?? '') !== (nSet?.pluginUpdateMode ?? '')) return false;
@@ -768,6 +775,17 @@ export function isEquivalentTelemetry(prev, next) {
     pCloud?.lastSyncError !== nCloud?.lastSyncError ||
     pCloud?.lastUpdateError !== nCloud?.lastUpdateError ||
     pCloud?.lastUpdateResult?.updatedAtMs !== nCloud?.lastUpdateResult?.updatedAtMs
+  ) {
+    return false;
+  }
+  const pFx = prev.fxRates;
+  const nFx = next.fxRates;
+  if (
+    pFx?.fetchedAtMs !== nFx?.fetchedAtMs ||
+    pFx?.provider !== nFx?.provider ||
+    pFx?.source !== nFx?.source ||
+    pFx?.date !== nFx?.date ||
+    pFx?.lastError !== nFx?.lastError
   ) {
     return false;
   }
@@ -1967,6 +1985,9 @@ export async function saveSettingsPatch(patch) {
   if (Object.prototype.hasOwnProperty.call(safePatch, 'language')) {
     safePatch.language = normalizeI18nLanguage(safePatch.language);
   }
+  if (Object.prototype.hasOwnProperty.call(safePatch, 'displayCurrency')) {
+    safePatch.displayCurrency = normalizeDisplayCurrency(safePatch.displayCurrency);
+  }
   if (Object.prototype.hasOwnProperty.call(safePatch, 'themeAccent')) {
     safePatch.themeAccent = normalizeClientThemeAccent(safePatch.themeAccent);
   }
@@ -2288,6 +2309,17 @@ export async function triggerCloudSync() {
 
 export const normalizeClientAutoConfigureLaunch = normalizeAutoConfigureLaunch;
 export const normalizeClientEnableRemoteSshTelemetry = normalizeEnableRemoteSshTelemetry;
+
+export async function triggerFxSync() {
+  const res = await callSidecarApi('/api/fx-sync', { method: 'POST', body: {} });
+  const cur = telemetryStore.getState().telemetry;
+  if (cur && res?.fxRates) {
+    telemetryStore.setState({
+      telemetry: { ...cur, fxRates: res.fxRates },
+    });
+  }
+  return res;
+}
 
 export async function triggerBridgeHostRelaunch(options = {}) {
   const payload =

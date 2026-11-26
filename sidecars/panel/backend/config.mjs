@@ -28,10 +28,12 @@ export {
   CONTEXT_AGENT_MODES,
   DEFAULT_CLI_STATUSLINE_SLOTS,
   DEFAULT_CONTEXT_AGENT_MODE,
+  DEFAULT_DISPLAY_CURRENCY,
   DEFAULT_HOVER_METRICS,
   DEFAULT_HOVER_METRIC_STYLE,
   DEFAULT_HOVER_MODULES,
   DEFAULT_HOVER_SYNC_OVERVIEW_METRICS,
+  DISPLAY_CURRENCY_META,
   DEFAULT_OVERVIEW_METRICS,
   DEFAULT_OVERVIEW_METRIC_STYLE,
   DEFAULT_OVERVIEW_MODULES,
@@ -53,6 +55,7 @@ export {
   OVERVIEW_METRIC_KEYS,
   OVERVIEW_MODULE_KEYS,
   STEP_TABLE_COLUMN_KEYS,
+  SUPPORTED_DISPLAY_CURRENCIES,
   SUPPORTED_LANGUAGES,
   THEME_ACCENT_KEYS,
   TOPBAR_SLOT_KEYS,
@@ -60,6 +63,7 @@ export {
   normalizeAutoConfigureLaunch,
   normalizeCliStatusLineSlots,
   normalizeContextAgentMode,
+  normalizeDisplayCurrency,
   normalizeEnableRemoteSshTelemetry,
   normalizeExperimentalQuotaReservation,
   normalizeFontScale,
@@ -187,6 +191,7 @@ export const REMOTE_CATALOG_CACHE_FILE = join(DATA_DIR, 'remote_pricing_cache.js
 export const CLI_STATUS_SNAPSHOT_FILE = join(DATA_DIR, 'cli-status-snapshot.json');
 export const QUOTA_RESERVATION_STATE_FILE = join(DATA_DIR, 'quota_reservation_state.json');
 export const ACCOUNT_QUOTA_HISTORY_FILE = join(DATA_DIR, 'account_quota_history.json');
+export const FX_RATES_CACHE_FILE = join(DATA_DIR, 'fx_rates_cache.json');
 
 /**
  * 本地对话记录目录、脑图日志目录、守护发现目录与跨端深层统计缓存路径候选列表（联合覆盖 Desktop / CLI / IDE）。

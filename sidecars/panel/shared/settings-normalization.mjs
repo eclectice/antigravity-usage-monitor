@@ -4,6 +4,57 @@
 
 export const SUPPORTED_LANGUAGES = Object.freeze(['auto', 'zh-CN', 'en-US']);
 
+export const SUPPORTED_DISPLAY_CURRENCIES = Object.freeze([
+  'CNY',
+  'USD',
+  'MYR',
+  'EUR',
+  'GBP',
+  'JPY',
+  'SGD',
+  'AUD',
+  'CAD',
+  'HKD',
+  'KRW',
+  'INR',
+  'TWD',
+  'THB',
+  'IDR',
+  'CHF',
+]);
+
+export const DEFAULT_DISPLAY_CURRENCY = 'CNY';
+
+export const DISPLAY_CURRENCY_META = Object.freeze({
+  CNY: Object.freeze({ code: 'CNY', symbol: '¥', fallbackRate: 7.2, decimals: 1 }),
+  USD: Object.freeze({ code: 'USD', symbol: '$', fallbackRate: 1, decimals: 2 }),
+  MYR: Object.freeze({ code: 'MYR', symbol: 'RM', fallbackRate: 4.4, decimals: 2 }),
+  EUR: Object.freeze({ code: 'EUR', symbol: '€', fallbackRate: 0.92, decimals: 2 }),
+  GBP: Object.freeze({ code: 'GBP', symbol: '£', fallbackRate: 0.79, decimals: 2 }),
+  JPY: Object.freeze({ code: 'JPY', symbol: '¥', fallbackRate: 152, decimals: 0 }),
+  SGD: Object.freeze({ code: 'SGD', symbol: 'S$', fallbackRate: 1.34, decimals: 2 }),
+  AUD: Object.freeze({ code: 'AUD', symbol: 'A$', fallbackRate: 1.54, decimals: 2 }),
+  CAD: Object.freeze({ code: 'CAD', symbol: 'C$', fallbackRate: 1.39, decimals: 2 }),
+  HKD: Object.freeze({ code: 'HKD', symbol: 'HK$', fallbackRate: 7.78, decimals: 1 }),
+  KRW: Object.freeze({ code: 'KRW', symbol: '₩', fallbackRate: 1380, decimals: 0 }),
+  INR: Object.freeze({ code: 'INR', symbol: '₹', fallbackRate: 84.5, decimals: 1 }),
+  TWD: Object.freeze({ code: 'TWD', symbol: 'NT$', fallbackRate: 32.5, decimals: 1 }),
+  THB: Object.freeze({ code: 'THB', symbol: '฿', fallbackRate: 34.5, decimals: 1 }),
+  IDR: Object.freeze({ code: 'IDR', symbol: 'Rp', fallbackRate: 15800, decimals: 0 }),
+  CHF: Object.freeze({ code: 'CHF', symbol: 'CHF ', fallbackRate: 0.88, decimals: 2 }),
+});
+
+/**
+ * 归一化二级展示货币代码（默认 `'CNY'`；`'USD'` 表示仅展示美元并隐藏二级换算）。
+ *
+ * @param {unknown} currency
+ * @returns {string}
+ */
+export function normalizeDisplayCurrency(currency) {
+  const clean = String(currency ?? '').trim().toUpperCase();
+  return SUPPORTED_DISPLAY_CURRENCIES.includes(clean) ? clean : DEFAULT_DISPLAY_CURRENCY;
+}
+
 export const THEME_ACCENT_KEYS = Object.freeze([
   'host',
   'blue',

@@ -14,6 +14,7 @@ import {
 } from '../../core/domPatch.js';
 import {
   formatCnyApprox,
+  formatSecondaryCurrency,
   formatMetric,
   formatPctNumber,
   formatSpeedMetric,
@@ -364,7 +365,12 @@ export function updateBreakdownItemRow(refs, item, totalsCtx, sortMode = 'tokens
     patchAttr(refs.pctBadge, 'hidden', false);
     patchAttr(refs.pctBadge, 'title', null);
     patchText(refs.pctBadge, formatPctNumber(costShare, { withSymbol: true }));
-    patchText(refs.totalTokEl, isAllUnpriced ? '' : formatCnyApprox(costVal));
+    patchText(
+      refs.totalTokEl,
+      isAllUnpriced
+        ? ''
+        : formatSecondaryCurrency(costVal, totalsCtx?.displayCurrency, totalsCtx?.fxRates)
+    );
     patchText(refs.costEl, costText);
 
     patchAttr(refs.segBar.el, 'hidden', true);

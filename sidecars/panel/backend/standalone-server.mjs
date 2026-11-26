@@ -22,6 +22,7 @@ import { ensureLsEndpointDiscovered } from './ls-discovery.mjs';
 import { ensureCliStatusLineConfigured } from './cli-statusline-config.mjs';
 import { syncCloudCatalog } from './plugin-updater.mjs';
 import { normalizeLanguageSetting } from '../shared/settings-normalization.mjs';
+import { syncFxRates } from './fx-rates.mjs';
 
 const MAX_JSON_BODY_BYTES = 1024 * 1024;
 const AUTH_COOKIE_NAME = 'ag_um_token';
@@ -758,6 +759,7 @@ export function createStandaloneWebServer(options = {}) {
     }
     if (!options.skipStartupDiscovery && lsRuntimeEndpoint.addr !== 'test.invalid') {
       ensureCliStatusLineConfigured({ enabled: loadSettings().enableCliStatusLine !== false });
+      syncFxRates({ force: false }).catch(() => {});
       if (lsRuntimeEndpoint.baseUrl) {
         syncCloudCatalog({ force: false }).catch(() => {});
       } else {
